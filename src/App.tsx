@@ -1,21 +1,32 @@
-import './App.css'
-import { Login } from './pages/Login'
-import { Form } from './pages/Form'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Suspense, lazy } from 'react';
+import { BrowserRouter, Route, Navigate } from 'react-router-dom';
+
+import { PrivateRoutes, PublicRoutes } from './models';
+import  { AuthGuard }  from './guards';
+import NotFoundContainer from './helpers/NotFoundContainer';
+import './App.css';
+import { Loader, Logout } from './components';
+
+const Login = lazy(() => import('./pages/Login/Login'));
+const Private = lazy(() => import('./pages/Private/Private'));
 
 function App() {
-
-  return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/form" element={<Form />} />
-          <Route path="*" element={<h1>404</h1>} />
-        </Routes>
-      </BrowserRouter>
-    </div>
-  )
+	return (
+		<>
+			<Suspense fallback={<Loader isLoading/>}>
+				<BrowserRouter>
+					<Logout />
+					<NotFoundContainer>
+						<Route path="/" element={<Navigate to={PrivateRoutes.PRIVATE} />} />
+						<Route path={PublicRoutes.LOGIN} element={<Login />} />
+						<Route element={<AuthGuard/>}>
+							<Route path={`${PrivateRoutes.PRIVATE}/*`} element={<Private/>} />
+						</Route>
+					</NotFoundContainer>
+				</BrowserRouter>
+			</Suspense>
+		</>
+	);
 }
 
-export default App
+export default App;
